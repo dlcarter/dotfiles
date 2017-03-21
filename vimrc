@@ -41,6 +41,10 @@ endfunction
 command! -bang Tabcloseright call TabCloseRight('<bang>')
 "command! -bang Tabcloseleft call TabCloseLeft('<bang>')
 
+" Ignores case unless search includes uppercase. Sweet!
+set ignorecase
+set smartcase
+
 "### Whitespaces
 "set listchars=eol:$,tab:>-,trail:~,extends:>,precedes:<
 "set list
