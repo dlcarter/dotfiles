@@ -52,3 +52,5 @@ set listchars=trail:·
 set list
 
 set directory=$HOME/.vim/swapfiles/
+
+set conceallevel=0
