@@ -1,0 +1,5 @@
+#!/bin/sh
+
+src_dir=$(dirname ${BASH_SOURCE})
+filepath=$src_dir/timer.rb
+ruby $filepath $1 Pomodoro
