@@ -1,0 +1,3 @@
+#!/bin/sh
+
+ruby $BASH_SOURCE.rb $1 $2
