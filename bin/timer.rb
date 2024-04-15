@@ -10,7 +10,7 @@ BLOCK_CHARS = "▎▍▌▋▊▉"
 THRESHOLD_YELLOW = 50 # Percentage of time remaining at which to turn timer yellow
 THRESHOLD_RED = 20 # Percentage of time remaining at which to turn timer red
 TIMES_UP_SPOKEN="Hey Pommo-Dorko, your time is up"
-TIMES_UP_ALERT_TITLE="Pomodorko"
+TIMES_UP_ALERT_label="Pomodorko"
 TIMES_UP_ALERT_BODY="Time is up. Switch tasks?"
 
 def overwrite(str)
@@ -52,46 +52,81 @@ end
 def alert(message="")
   threads = []
   if `which say` && $?.success?
-    # threads << Thread.new { `say "Your #{num_minutes} minute #{title} timer is up."` }
-    # threads << Thread.new { `osascript -e 'display alert "#{TIMES_UP_ALERT_TITLE}" message "#{TIMES_UP_ALERT_BODY}" as critical'` }
     threads << Thread.new { `say "#{message}"` }
-    threads << Thread.new { `osascript -e 'display alert "#{message}'` }
+    threads << Thread.new { `osascript -e 'display alert "#{message}"'` }
   else
     threads << Thread.new { "spd-say #{message}" }
   end
   threads.each(&:join)
 end
 
-def go(num_minutes, title="")
-  clear_terminal
-  puts "Number of minutes: #{num_minutes}"
-  puts "Title: #{title}"
+def time_to_seconds(time_string)
+  time_string.split(":").map(&:to_i).inject(0) { |sum, n| sum * 60 + n }
+end
 
-  num_minutes ||= NUM_MINUTES
-  num_minutes = num_minutes.to_i
-  num_seconds = num_minutes * 60
+def bucket_seconds(seconds)
+  hours = seconds / 3600
+  minutes = (seconds % 3600) / 60
+  seconds = seconds % 60
+  { hour: hours, minute: minutes, second: seconds }
+end
+
+def seconds_to_timestring(seconds)
+  bucket_seconds(seconds).values.map { |n| n.to_s.rjust(2, "0") }.join(":")
+end
+
+def seconds_to_verbose(seconds)
+  bucket_seconds(seconds).map do |k, n|
+    n.to_s + " " + k.to_s + (n == 1 ? "" : "s") if n > 0
+  end.compact.join(", ")
+end
+
+def go(time_string, label=nil)
+  clear_terminal
+
+  time_string = "#{NUM_MINUTES}:00" unless time_string&.length && time_string.length > 0
+  num_seconds = time_to_seconds(time_string)
   target = Time.at(Time.now + num_seconds).to_i
+
+  title = [
+    "Your",
+    label,
+    "timer for",
+    seconds_to_verbose(num_seconds)
+  ].compact.join(" ")
+
+  puts title
+  puts "Timer up at #{Time.at(target).strftime("%I:%M %p")}"
+  puts "Press Ctrl-C to stop the timer.\n"
 
   loop do
     togo = target - Time.now.to_i
     minutes = (togo / 60).floor
     seconds = (togo % 60)
-    break if minutes < 0 # Time's up!
+    break if togo < 0 # Time's up!
 
-    percentage = ((togo / num_seconds.to_f) * 100).floor
-    char_num = ((seconds / 60.0) * BLOCK_CHARS.length).floor
-    if percentage > THRESHOLD_YELLOW
-      overwrite "#{pad(minutes)}:#{pad(seconds)}".light_blue + " " + "#{BLOCK * minutes}".light_green + BLOCK_CHARS[char_num].light_green
-    elsif percentage > THRESHOLD_RED
-      overwrite "#{pad(minutes)}:#{pad(seconds)}".light_blue + " " + "#{BLOCK * minutes}".light_yellow + BLOCK_CHARS[char_num].light_yellow
-    else
-      overwrite "#{pad(minutes)}:#{pad(seconds)}".light_blue + " " + "#{BLOCK * minutes}".light_red + BLOCK_CHARS[char_num].light_red
-    end
+    render_timer(togo, num_seconds)
     sleep 1
   end
 
-  alert "Your #{num_minutes} minute #{title} timer is up."
+  alert "Your #{title} is up."
+end
 
+def timer_bar(percentage)
+  bar = (BLOCK * percentage)
+  if percentage > THRESHOLD_YELLOW
+    bar.light_green
+  elsif percentage > THRESHOLD_RED
+    bar.light_yellow
+  else
+    bar.light_red
+  end
+end
+
+def render_timer(remaining, total)
+  percentage = ((remaining / total.to_f) * 100).floor
+  timestamp = seconds_to_timestring(remaining).light_blue
+  overwrite timestamp + timer_bar(percentage)
 end
 
 go ARGV[0], ARGV[1]
