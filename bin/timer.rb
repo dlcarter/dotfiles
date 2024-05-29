@@ -1,5 +1,7 @@
 #!ruby
 
+# Simple focus timer, written by Derek Carter
+
 require 'colorize'
 
 NUM_MINUTES = 25
@@ -89,7 +91,6 @@ def go(time_string, label=nil)
   target = Time.at(Time.now + num_seconds).to_i
 
   title = [
-    "Your",
     label,
     "timer for",
     seconds_to_verbose(num_seconds)
@@ -126,7 +127,7 @@ end
 def render_timer(remaining, total)
   percentage = ((remaining / total.to_f) * 100).floor
   timestamp = seconds_to_timestring(remaining).light_blue
-  overwrite timestamp + timer_bar(percentage)
+  overwrite (timestamp + timer_bar(percentage))
 end
 
 go ARGV[0], ARGV[1]
