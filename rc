@@ -1,0 +1,8 @@
+alias bers="bundle exec rails s"
+alias berc="bundle exec rails c"
+alias pom="timer 25 Pomodoro"
+
+giffer() {
+  output_file="$1.processed.gif"
+  ffmpeg -y -i $1 -filter_complex "[0:v] fps=12,scale=800:-1,split [a][b];[a] palettegen [p];[b][p] paletteuse" $output_file
+}
