@@ -11,9 +11,6 @@ BLOCK = "█"
 BLOCK_CHARS = "▎▍▌▋▊▉"
 THRESHOLD_YELLOW = 50 # Percentage of time remaining at which to turn timer yellow
 THRESHOLD_RED = 20 # Percentage of time remaining at which to turn timer red
-TIMES_UP_SPOKEN="Hey Pommo-Dorko, your time is up"
-TIMES_UP_ALERT_label="Pomodorko"
-TIMES_UP_ALERT_BODY="Time is up. Switch tasks?"
 
 def overwrite(str)
   puts OVERWRITE_LINE + str
@@ -63,6 +60,7 @@ def alert(message="")
 end
 
 def time_to_seconds(time_string)
+  time_string += ":00" unless time_string.include?(":")
   time_string.split(":").map(&:to_i).inject(0) { |sum, n| sum * 60 + n }
 end
 
